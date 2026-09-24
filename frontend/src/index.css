@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Theme (Clean, Crisp Monochromatic) */
+    --background: 220 14% 96%; /* #f4f5f7 soft neutral light grey */
+    --foreground: 240 10% 4%; /* #09090b rich charcoal black */
+
+    --card: 0 0% 100%; /* #ffffff pure white card */
+    --card-foreground: 240 10% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    --primary: 240 6% 10%; /* #18181b */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 5% 94%; /* #ececee */
+    --secondary-foreground: 240 6% 10%;
+
+    --muted: 240 5% 92%;
+    --muted-foreground: 240 4% 46%; /* #71717a */
+
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 6% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 6% 88%; /* #e1e1e6 crisp light border */
+    --input: 240 6% 88%;
+    --ring: 240 6% 10%;
+
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    /* Dark Theme (Sleek Charcoal Slate Grey, NOT pitch black) */
+    --background: 228 10% 12%; /* #1a1b1f soft dark charcoal grey */
+    --foreground: 0 0% 98%; /* #f4f4f5 crisp bright readable white */
+
+    --card: 228 9% 16%; /* #222329 elevated grey surface */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 228 9% 16%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%; /* White button in dark mode */
+    --primary-foreground: 240 6% 10%;
+
+    --secondary: 228 8% 21%; /* #2f3038 */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 228 8% 21%;
+    --muted-foreground: 240 5% 65%; /* #a1a1aa */
+
+    --accent: 228 8% 21%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 228 7% 24%; /* #373842 clean subtle grey border */
+    --input: 228 7% 24%;
+    --ring: 0 0% 98%;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Clean Monochromatic Card Panel */
+.glass-panel {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}

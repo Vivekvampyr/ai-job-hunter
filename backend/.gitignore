@@ -1,0 +1,23 @@
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+*.env
+
+# Python & Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Uploads & Database
+uploads/
+*.db
+*.sqlite
+*.sqlite3
+ai_job_hunter.db
