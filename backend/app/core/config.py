@@ -1,5 +1,5 @@
 import os
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,7 +14,18 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # Database: Supports PostgreSQL (Supabase/Render/Local) with fallback to SQLite for local dev
+    SUPABASE_POSTGRES_URL: Optional[str] = None
     DATABASE_URL: str = "sqlite:///./ai_job_hunter.db"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str]) -> str:
+        raw = os.getenv("SUPABASE_POSTGRES_URL") or v or "sqlite:///./ai_job_hunter.db"
+        if raw:
+            raw = raw.strip().strip('"').strip("'")
+            if raw.startswith("postgres://"):
+                raw = raw.replace("postgres://", "postgresql://", 1)
+        return raw
     
     # Security & JWT
     SECRET_KEY: str = "ai_job_hunter_super_secret_jwt_key_change_in_production_987654321"
