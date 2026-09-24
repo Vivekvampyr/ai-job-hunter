@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Mail, Phone, MapPin, Building, Send, Download, Search } from 'lucide-react';
+import { ExternalLink, Mail, Phone, MapPin, Building, Send, Download, Search, Users } from 'lucide-react';
 import type { Job } from '../types';
 import { MatchBadge } from './MatchBadge';
 
@@ -182,6 +182,8 @@ export const JobTable: React.FC<JobTableProps> = ({
                           ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/40'
                           : job.source_ats?.toLowerCase().includes('lever')
                           ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
+                          : job.source_ats?.toLowerCase().includes('linkedin')
+                          ? 'bg-sky-50 dark:bg-sky-950/40 text-[#0a66c2] dark:text-sky-300 border-sky-200 dark:border-sky-800/40'
                           : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
                       }`}
                     >
@@ -275,20 +277,52 @@ export const JobTable: React.FC<JobTableProps> = ({
 
                   {/* Apply Actions */}
                   <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap sm:flex-nowrap">
+                      {/* View on LinkedIn */}
+                      <a
+                        href={
+                          job.source_ats?.toLowerCase().includes('linkedin')
+                            ? job.apply_url
+                            : `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(job.title + ' ' + job.company_name)}&location=${encodeURIComponent(job.location || 'Remote')}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2 py-1.5 rounded-lg text-xs font-semibold text-[#0a66c2] hover:text-[#004182] dark:text-[#388be8] dark:hover:text-[#70b5f9] bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/30 dark:hover:bg-sky-900/40 border border-sky-200/80 dark:border-sky-800/40 transition-colors inline-flex items-center gap-1 shadow-sm shrink-0"
+                        title={`View ${job.title} at ${job.company_name} on LinkedIn`}
+                      >
+                        <span>LinkedIn</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+
+                      {/* Find Recruiter on LinkedIn */}
+                      <a
+                        href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(job.company_name + ' technical recruiter OR talent acquisition OR hiring manager')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2 py-1.5 rounded-lg text-xs font-semibold text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-purple-100 bg-purple-50/70 hover:bg-purple-100/80 dark:bg-purple-950/30 dark:hover:bg-purple-900/40 border border-purple-200/80 dark:border-purple-800/40 transition-colors inline-flex items-center gap-1 shadow-sm shrink-0"
+                        title={`Find recruiters or hiring managers for ${job.company_name} on LinkedIn`}
+                      >
+                        <Users className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                        <span>Recruiter</span>
+                      </a>
+
+                      {/* Direct ATS Page */}
                       <a
                         href={job.apply_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-[#1a1b1f] hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 transition-colors inline-flex items-center gap-1 shadow-sm"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-[#1a1b1f] hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 transition-colors inline-flex items-center gap-1 shadow-sm shrink-0"
                         title="Open official ATS application form"
                       >
                         <span>ATS Page</span>
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3 h-3 opacity-70" />
                       </a>
+
+                      {/* 1-Click Cold Outreach CTA */}
                       <button
                         onClick={() => onApply(job)}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/25 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/25 transition-all inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                        title="Generate tailored AI outreach email draft via Gmail"
                       >
                         <Send className="w-3 h-3" />
                         <span>Apply</span>

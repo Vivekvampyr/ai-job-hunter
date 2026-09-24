@@ -22,7 +22,8 @@ class SearchEngineDiscoveryClient:
         "boards.greenhouse.io",
         "jobs.lever.co",
         "jobs.ashbyhq.com",
-        "apply.workable.com"
+        "apply.workable.com",
+        "linkedin.com/jobs/view"
     ]
 
     async def discover_jobs(
@@ -167,6 +168,26 @@ class SearchEngineDiscoveryClient:
             source_ats = "Workable"
             if len(path_parts) >= 1:
                 company_name = path_parts[0].replace("-", " ").title()
+        elif "linkedin.com" in hostname:
+            source_ats = "LinkedIn"
+            # Strip LinkedIn branding suffix
+            raw_title = re.sub(r"\s*[|–-]\s*LinkedIn\s*$", "", title, flags=re.IGNORECASE).strip()
+            # Attempt to split Company and Role from standard formats:
+            # e.g., "Company hiring Role in Location" or "Role at Company" or "Role - Company"
+            if " hiring " in raw_title:
+                hiring_parts = raw_title.split(" hiring ")
+                company_name = hiring_parts[0].strip()
+                title = hiring_parts[1].split(" in ")[0].strip() if " in " in hiring_parts[1] else hiring_parts[1].strip()
+            elif " at " in raw_title:
+                at_parts = raw_title.split(" at ")
+                title = at_parts[0].strip()
+                company_name = at_parts[1].split(" in ")[0].split("(")[0].strip()
+            elif " - " in raw_title:
+                dash_parts = raw_title.split(" - ")
+                title = dash_parts[0].strip()
+                company_name = dash_parts[1].split(" in ")[0].strip()
+            else:
+                title = raw_title
         else:
             return None
 
