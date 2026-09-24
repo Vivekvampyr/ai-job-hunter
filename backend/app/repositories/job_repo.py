@@ -76,7 +76,7 @@ class JobRepository:
         work_mode: Optional[str] = None,
         company: Optional[str] = None,
         skip: int = 0,
-        limit: int = 50
+        limit: int = 200
     ) -> Tuple[List[Job], int]:
         q = db.query(Job).options(joinedload(Job.company), joinedload(Job.contacts))
 

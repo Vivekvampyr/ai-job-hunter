@@ -95,7 +95,7 @@ async def search_jobs(
     JobRepository.upsert_normalized_jobs(db, normalized_jobs)
 
     # 3. Retrieve jobs and calculate candidate matches
-    jobs, total = JobRepository.get_jobs(db, query=search_req.query, limit=50)
+    jobs, total = JobRepository.get_jobs(db, query=search_req.query, limit=250)
     
     formatted_jobs = [_format_job_response(j, profile, db) for j in jobs]
 
@@ -122,7 +122,7 @@ def get_jobs(
     work_mode: Optional[str] = Query(None),
     match_level: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(200, ge=1, le=500),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

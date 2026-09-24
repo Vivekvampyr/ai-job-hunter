@@ -107,7 +107,7 @@ class SearchEngineDiscoveryClient:
         discovered_jobs: List[NormalizedJob] = []
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=4.0) as client:
                 res = await client.get(search_url, headers=headers)
                 if res.status_code != 200:
                     return []

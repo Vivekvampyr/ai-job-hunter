@@ -46,13 +46,18 @@ class Settings(BaseSettings):
     
     # Curated Tech Companies for Public ATS Search
     GREENHOUSE_COMPANIES: List[str] = [
+        "togetherai", "vercel", "brex", "monzo", "inmobi", "razorpaysoftwareprivatelimited",
         "stripe", "figma", "github", "gitlab", "canonical", "elastic", "mongodb", "cloudflare"
     ]
     LEVER_COMPANIES: List[str] = [
-        "palantir"
+        "meesho", "cred", "palantir"
     ]
     ASHBY_COMPANIES: List[str] = [
-        "supabase", "linear", "resend", "ramp", "synthesia"
+        "cursor", "modal", "perplexity", "llamaindex", "langchain", "mistral.ai",
+        "supabase", "resend", "ramp", "linear", "synthesia"
+    ]
+    WORKDAY_COMPANIES: List[str] = [
+        "browserstack"
     ]
     SMARTRECRUITERS_COMPANIES: List[str] = [
         "redbull", "smartrecruiters"

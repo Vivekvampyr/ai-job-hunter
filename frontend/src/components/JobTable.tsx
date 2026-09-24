@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ExternalLink, Mail, Phone, MapPin, Building, Send, Download, Search, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ExternalLink, Mail, Phone, MapPin, Building, Send, Download, Search, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Job } from '../types';
 import { MatchBadge } from './MatchBadge';
 
@@ -27,6 +27,8 @@ export const JobTable: React.FC<JobTableProps> = ({
   setSelectedMatchLevel,
 }) => {
   const [tableSearch, setTableSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   // Filter jobs based on active selections
   const filteredJobs = jobs.filter((job) => {
@@ -47,21 +49,58 @@ export const JobTable: React.FC<JobTableProps> = ({
     return true;
   });
 
+  // Reset to page 1 whenever any filter, search, or jobs list changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedLocation, selectedWorkMode, selectedMatchLevel, tableSearch, jobs]);
+
+  // Pagination slicing
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredJobs.length);
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Helper for generating page numbers (e.g. 1, 2, 3, 4, 5, 6, 7 ... 10)
+  const getPageNumbers = (): (number | string)[] => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, '...', totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // Smooth scroll to top of table if scrolled
+    const el = document.getElementById('discovered-positions-heading');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="glass-panel rounded-2xl overflow-hidden shadow-sm">
       {/* Table Toolbar */}
       <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-[#373842] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-50/60 dark:bg-[#1c1d22]/60">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" id="discovered-positions-heading">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Discovered Positions ({filteredJobs.length})
             </h2>
+            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 font-semibold">
+              Page {currentPage} of {totalPages}
+            </span>
             <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-[#2b2c34] text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
               Direct ATS
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Real-time public postings from Ashby, Lever, Greenhouse, SmartRecruiters & verified feeds.
+            Real-time public postings from Ashby, Lever, Greenhouse, SmartRecruiters, Workday & verified feeds.
           </p>
         </div>
 
@@ -154,7 +193,7 @@ export const JobTable: React.FC<JobTableProps> = ({
                 </td>
               </tr>
             ) : (
-              filteredJobs.map((job) => (
+              paginatedJobs.map((job) => (
                 <tr
                   key={job.id}
                   className="hover:bg-zinc-50 dark:hover:bg-[#25262c]/50 transition-colors group"
@@ -335,6 +374,67 @@ export const JobTable: React.FC<JobTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {filteredJobs.length > 0 && (
+        <div className="p-4 sm:p-5 border-t border-zinc-200 dark:border-[#373842] flex flex-col sm:flex-row items-center justify-between gap-4 bg-zinc-50/60 dark:bg-[#1c1d22]/60">
+          {/* Result counter */}
+          <div className="text-xs text-zinc-600 dark:text-zinc-400">
+            Showing <span className="font-semibold text-zinc-900 dark:text-zinc-100">{startIndex + 1}</span>–
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">{endIndex}</span> of{' '}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">{filteredJobs.length}</span> positions
+            <span className="text-zinc-400 dark:text-zinc-500 text-[11px] ml-1.5 font-mono">
+              (20 per page)
+            </span>
+          </div>
+
+          {/* Page buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {/* Previous */}
+            <button
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-[#373842] bg-white dark:bg-[#25262c] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-[#2e3037] disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1 shadow-sm cursor-pointer"
+              title="Previous page"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Previous</span>
+            </button>
+
+            {/* Numbered page buttons */}
+            {getPageNumbers().map((p, idx) =>
+              typeof p === 'number' ? (
+                <button
+                  key={`page-${p}`}
+                  onClick={() => handlePageChange(p)}
+                  className={`min-w-[32px] h-8 px-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    currentPage === p
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-500/40'
+                      : 'bg-white dark:bg-[#25262c] border border-zinc-200 dark:border-[#373842] text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 hover:bg-zinc-50 dark:hover:bg-[#2e3037]'
+                  }`}
+                >
+                  {p}
+                </button>
+              ) : (
+                <span key={`ellipsis-${idx}`} className="px-1 text-xs text-zinc-400 select-none">
+                  ...
+                </span>
+              )
+            )}
+
+            {/* Next */}
+            <button
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-[#373842] bg-white dark:bg-[#25262c] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-[#2e3037] disabled:opacity-40 disabled:cursor-not-allowed transition-all inline-flex items-center gap-1 shadow-sm cursor-pointer"
+              title="Next page"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

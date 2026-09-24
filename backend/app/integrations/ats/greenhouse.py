@@ -16,7 +16,7 @@ class GreenhouseClient(BaseATSClient):
         jobs: List[NormalizedJob] = []
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=4.0) as client:
                 response = await client.get(url)
                 if response.status_code != 200:
                     return []
@@ -43,11 +43,31 @@ class GreenhouseClient(BaseATSClient):
                     work_mode = detect_work_mode(location_name, clean_content)
                     skills = extract_skills_from_text(f"{title} {clean_content}")
 
-                    company_name = company_slug.replace("-", " ").title()
+                    NAME_MAP = {
+                        "razorpaysoftwareprivatelimited": ("Razorpay", "https://razorpay.com"),
+                        "togetherai": ("Together AI", "https://together.ai"),
+                        "inmobi": ("InMobi", "https://inmobi.com"),
+                        "monzo": ("Monzo", "https://monzo.com"),
+                        "brex": ("Brex", "https://brex.com"),
+                        "vercel": ("Vercel", "https://vercel.com"),
+                        "stripe": ("Stripe", "https://stripe.com"),
+                        "github": ("GitHub", "https://github.com"),
+                        "gitlab": ("GitLab", "https://gitlab.com"),
+                        "cloudflare": ("Cloudflare", "https://cloudflare.com"),
+                        "mongodb": ("MongoDB", "https://mongodb.com"),
+                        "elastic": ("Elastic", "https://elastic.co"),
+                        "figma": ("Figma", "https://figma.com"),
+                        "canonical": ("Canonical", "https://canonical.com"),
+                    }
+                    if company_slug.lower() in NAME_MAP:
+                        company_name, company_web = NAME_MAP[company_slug.lower()]
+                    else:
+                        company_name = company_slug.replace("-", " ").title()
+                        company_web = f"https://{company_slug}.com"
 
                     jobs.append(NormalizedJob(
                         company_name=company_name,
-                        company_website=f"https://{company_slug}.com",
+                        company_website=company_web,
                         company_ats_slug=company_slug,
                         external_id=f"gh_{item.get('id')}",
                         title=title,

@@ -16,7 +16,7 @@ class LeverClient(BaseATSClient):
         jobs: List[NormalizedJob] = []
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=4.0) as client:
                 response = await client.get(url)
                 if response.status_code != 200:
                     return []
@@ -46,11 +46,20 @@ class LeverClient(BaseATSClient):
                     work_mode = detect_work_mode(location_name, full_desc)
                     skills = extract_skills_from_text(f"{title} {full_desc}")
 
-                    company_name = company_slug.replace("-", " ").title()
+                    NAME_MAP = {
+                        "cred": ("CRED", "https://cred.club"),
+                        "meesho": ("Meesho", "https://meesho.io"),
+                        "palantir": ("Palantir", "https://palantir.com"),
+                    }
+                    if company_slug.lower() in NAME_MAP:
+                        company_name, company_web = NAME_MAP[company_slug.lower()]
+                    else:
+                        company_name = company_slug.replace("-", " ").title()
+                        company_web = f"https://{company_slug}.com"
 
                     jobs.append(NormalizedJob(
                         company_name=company_name,
-                        company_website=f"https://{company_slug}.com",
+                        company_website=company_web,
                         company_ats_slug=company_slug,
                         external_id=f"lever_{item.get('id')}",
                         title=title,

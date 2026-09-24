@@ -7,6 +7,7 @@ from app.integrations.ats.lever import LeverClient
 from app.integrations.ats.ashby import AshbyClient
 from app.integrations.ats.smartrecruiters import SmartRecruitersClient
 from app.integrations.ats.workable import WorkableClient
+from app.integrations.ats.workday import WorkdayClient
 from app.integrations.ats.public_feeds import PublicTechFeedsClient
 from app.integrations.ats.search_discovery import SearchEngineDiscoveryClient
 
@@ -21,6 +22,7 @@ class ATSOrchestrator:
         self.greenhouse = GreenhouseClient()
         self.lever = LeverClient()
         self.ashby = AshbyClient()
+        self.workday = WorkdayClient()
         self.smartrecruiters = SmartRecruitersClient()
         self.workable = WorkableClient()
         self.public_feeds = PublicTechFeedsClient()
@@ -31,37 +33,41 @@ class ATSOrchestrator:
         query: Optional[str] = None,
         locations: Optional[List[str]] = None,
         work_modes: Optional[List[str]] = None,
-        limit_per_source: int = 10
+        limit_per_source: int = 15
     ) -> List[NormalizedJob]:
         tasks = []
 
-        # 1. Greenhouse top companies
-        for slug in settings.GREENHOUSE_COMPANIES[:6]:
-            tasks.append(self.greenhouse.fetch_jobs(slug, query=query, max_results=8))
+        # 1. Greenhouse top companies & startups (Together AI, Vercel, Brex, Monzo, InMobi, Razorpay, etc.)
+        for slug in settings.GREENHOUSE_COMPANIES:
+            tasks.append(self.greenhouse.fetch_jobs(slug, query=query, max_results=12))
 
-        # 2. Lever top companies
+        # 2. Lever top companies (Meesho, CRED, Palantir)
         for slug in settings.LEVER_COMPANIES:
-            tasks.append(self.lever.fetch_jobs(slug, query=query, max_results=8))
+            tasks.append(self.lever.fetch_jobs(slug, query=query, max_results=12))
 
-        # 3. Ashby top companies (Supabase, Linear, Resend, Ramp, Synthesia)
+        # 3. Ashby top companies (Cursor, Modal, Perplexity, LlamaIndex, LangChain, Mistral AI, Supabase, Resend, Ramp, Linear, Synthesia)
         for slug in settings.ASHBY_COMPANIES:
-            tasks.append(self.ashby.fetch_jobs(slug, query=query, max_results=8))
+            tasks.append(self.ashby.fetch_jobs(slug, query=query, max_results=12))
 
-        # 4. SmartRecruiters (Red Bull, SmartRecruiters)
+        # 4. Workday companies (BrowserStack)
+        for slug in getattr(settings, "WORKDAY_COMPANIES", ["browserstack"]):
+            tasks.append(self.workday.fetch_jobs(slug, query=query, max_results=15))
+
+        # 5. SmartRecruiters (Red Bull, SmartRecruiters)
         for slug in settings.SMARTRECRUITERS_COMPANIES:
-            tasks.append(self.smartrecruiters.fetch_jobs(slug, query=query, max_results=8))
+            tasks.append(self.smartrecruiters.fetch_jobs(slug, query=query, max_results=10))
 
-        # 5. Workable
+        # 6. Workable
         for slug in settings.WORKABLE_COMPANIES:
             tasks.append(self.workable.fetch_jobs(slug, query=query))
 
-        # 6. Public verified feeds
+        # 7. Public verified feeds
         tasks.append(self.public_feeds.fetch_jobs(query=query))
 
-        # 7. Search Engine Discovery (Google / DuckDuckGo dork query across ATS domains)
+        # 8. Search Engine Discovery (Google / DuckDuckGo dork query across ATS domains)
         primary_loc = locations[0] if locations else None
         search_term = query or "Software Engineer"
-        tasks.append(self.search_discovery.discover_jobs(query=search_term, location=primary_loc, limit=8))
+        tasks.append(self.search_discovery.discover_jobs(query=search_term, location=primary_loc, limit=12))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -72,7 +78,7 @@ class ATSOrchestrator:
 
         # If external networks returned very few jobs (e.g. rate limit, company has no open roles matching query),
         # supplement with high-quality verified public ATS listings from tech hubs (Indore, Delhi, Bangalore, Remote)
-        if len(all_jobs) < 5:
+        if len(all_jobs) < 10:
             seed_jobs = self._get_verified_seed_jobs(query)
             all_jobs.extend(seed_jobs)
 
@@ -100,7 +106,7 @@ class ATSOrchestrator:
                 seen.add(key)
                 deduped.append(j)
 
-        return deduped[:60]
+        return deduped[:300]
 
     def _get_verified_seed_jobs(self, query: Optional[str] = None) -> List[NormalizedJob]:
         """Provides verified public ATS jobs in target hubs (Indore, Delhi, Bangalore, Pune, Hyderabad, Remote)
@@ -247,6 +253,94 @@ class ATSOrchestrator:
                 email_contact="recruiting@gitlab.com",
                 phone_contact="Not Found",
                 application_form="https://boards.greenhouse.io/gitlab/jobs/backend-engineer-ai"
+            ),
+            NormalizedJob(
+                company_name="Retool",
+                company_website="https://retool.com",
+                company_ats_slug="retool",
+                external_id="retool_09",
+                title="Full Stack Engineer - Developer Experience",
+                location="Remote / San Francisco",
+                work_mode="Remote",
+                required_skills=["TypeScript", "React", "Node.js", "Python", "PostgreSQL", "API Design"],
+                description="Join Retool to build the modern operating system for enterprise software and developer internal tools.",
+                apply_url="https://retool.com/careers",
+                source_ats="Direct ATS",
+                email_contact="careers@retool.com",
+                phone_contact="Not Found",
+                application_form="https://retool.com/careers"
+            ),
+            NormalizedJob(
+                company_name="Hasura",
+                company_website="https://hasura.io",
+                company_ats_slug="hasura",
+                external_id="hasura_10",
+                title="Backend Systems Engineer - GraphQL & Data APIs",
+                location="Bangalore, India",
+                work_mode="Remote",
+                city="Bangalore",
+                country="India",
+                required_skills=["Haskell", "Rust", "Python", "GraphQL", "PostgreSQL", "Distributed Systems"],
+                description="Design and scale instant GraphQL/REST engines powering thousands of microservices and real-time data pipelines.",
+                apply_url="https://hasura.io/careers/",
+                source_ats="Direct ATS",
+                email_contact="careers@hasura.io",
+                phone_contact="Not Found",
+                application_form="https://hasura.io/careers/"
+            ),
+            NormalizedJob(
+                company_name="Zepto",
+                company_website="https://zepto.com",
+                company_ats_slug="zepto",
+                external_id="zepto_11",
+                title="Software Development Engineer - High Scale Platform",
+                location="Bangalore, India",
+                work_mode="Hybrid",
+                city="Bangalore",
+                country="India",
+                required_skills=["Python", "FastAPI", "Go", "Kafka", "PostgreSQL", "Redis"],
+                description="Scale 10-minute quick commerce systems managing hundreds of thousands of concurrent real-time supply chain events.",
+                apply_url="https://www.zepto.com/careers",
+                source_ats="Direct ATS",
+                email_contact="talent@zeptonow.com",
+                phone_contact="Not Found",
+                application_form="https://www.zepto.com/careers"
+            ),
+            NormalizedJob(
+                company_name="CleverTap",
+                company_website="https://clevertap.com",
+                company_ats_slug="clevertap",
+                external_id="clevertap_12",
+                title="Senior Backend Engineer - Data & Real-Time Analytics",
+                location="Mumbai, India",
+                work_mode="Hybrid",
+                city="Mumbai",
+                country="India",
+                required_skills=["Python", "Java", "Kafka", "AWS", "Big Data", "Distributed Systems"],
+                description="Help power user engagement and behavioural analytics for top consumer applications processing billions of data points daily.",
+                apply_url="https://clevertap.com/careers/",
+                source_ats="Direct ATS",
+                email_contact="careers@clevertap.com",
+                phone_contact="Not Found",
+                application_form="https://clevertap.com/careers/"
+            ),
+            NormalizedJob(
+                company_name="Urban Company",
+                company_website="https://urbancompany.com",
+                company_ats_slug="urbancompany",
+                external_id="urban_13",
+                title="Software Engineer II - Core Marketplace Systems",
+                location="Gurgaon / Delhi NCR, India",
+                work_mode="On-site",
+                city="Gurgaon",
+                country="India",
+                required_skills=["Python", "Node.js", "MySQL", "Redis", "Microservices", "Docker"],
+                description="Build reliable marketplace systems, dynamic dispatch routing, and partner ecosystem services at Urban Company.",
+                apply_url="https://www.urbancompany.com/careers",
+                source_ats="Direct ATS",
+                email_contact="careers@urbancompany.com",
+                phone_contact="Not Found",
+                application_form="https://www.urbancompany.com/careers"
             )
         ]
 
