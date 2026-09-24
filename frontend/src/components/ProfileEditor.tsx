@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, MapPin, Briefcase, Award, Check, Plus, X, Save } from 'lucide-react';
 import type { CandidateProfile } from '../types';
 
@@ -14,7 +14,7 @@ const EXPERIENCE_LEVELS = ['Entry Level', 'Mid Level', 'Senior Level'];
 export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateProfile }) => {
   if (!profile) return null;
 
-  const [fullName, setFullName] = useState(profile.full_name || 'Vivek Rajawat');
+  const [fullName, setFullName] = useState(profile.full_name || '');
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || 'Entry Level');
   const [preferredLocations, setPreferredLocations] = useState<string[]>(profile.preferred_locations || []);
   const [workPreferences, setWorkPreferences] = useState<string[]>(profile.work_preferences || []);
@@ -24,6 +24,19 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
   const [newRoleInput, setNewRoleInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Sync internal state when profile prop changes (e.g. user switch, resume upload)
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setExperienceLevel(profile.experience_level || 'Entry Level');
+      setPreferredLocations(profile.preferred_locations || []);
+      setWorkPreferences(profile.work_preferences || []);
+      setSkills(profile.skills || []);
+      setTargetRoles(profile.target_roles || []);
+      setSavedSuccess(false);
+    }
+  }, [profile]);
 
   const toggleLocation = (loc: string) => {
     setPreferredLocations((prev) =>
@@ -213,28 +226,34 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
           Target Job Roles (Used to generate search queries & role similarity)
         </label>
         <div className="flex flex-wrap gap-2 mb-3">
-          {targetRoles.map((role) => (
-            <span
-              key={role}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40"
-            >
-              {role}
-              <button
-                type="button"
-                onClick={() => handleRemoveRole(role)}
-                className="hover:text-red-500 text-indigo-400 transition-colors cursor-pointer"
+          {targetRoles.length === 0 ? (
+            <p className="text-xs text-zinc-500 italic py-1">
+              No target roles defined yet. Upload your resume or type a role below.
+            </p>
+          ) : (
+            targetRoles.map((role) => (
+              <span
+                key={role}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40"
               >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
+                {role}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRole(role)}
+                  className="hover:text-red-500 text-indigo-400 transition-colors cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))
+          )}
         </div>
         <form onSubmit={handleAddRole} className="flex gap-2 max-w-md">
           <input
             type="text"
             value={newRoleInput}
             onChange={(e) => setNewRoleInput(e.target.value)}
-            placeholder="Add role (e.g. AI Engineer, Python Developer)"
+            placeholder="Add role (e.g. AI Engineer, React Developer)"
             className="flex-1 px-3 py-1.5 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-200 dark:border-[#373842] rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"
           />
           <button
@@ -253,21 +272,27 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
           Extracted Skills ({skills.length})
         </label>
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {skills.map((skill) => (
-            <span
-              key={skill}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 font-medium"
-            >
-              {skill}
-              <button
-                type="button"
-                onClick={() => handleRemoveSkill(skill)}
-                className="hover:text-red-500 text-emerald-500/70 transition-colors cursor-pointer"
+          {skills.length === 0 ? (
+            <p className="text-xs text-zinc-500 italic py-1">
+              No skills extracted yet. Upload your resume or add your core skills below.
+            </p>
+          ) : (
+            skills.map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 font-medium"
               >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
+                {skill}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSkill(skill)}
+                  className="hover:text-red-500 text-emerald-500/70 transition-colors cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))
+          )}
         </div>
         <form onSubmit={handleAddSkill} className="flex gap-2 max-w-md">
           <input

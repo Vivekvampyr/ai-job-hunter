@@ -49,7 +49,7 @@ export interface JobContact {
 }
 
 export interface JobMatchDetail {
-  match_level: 'High' | 'Medium' | 'Low';
+  match_level: 'High' | 'Medium' | 'Low' | 'Pending';
   match_score: number;
   matched_skills: string[];
   missing_skills: string[];

@@ -17,16 +17,16 @@ def get_profile(
 ):
     profile = ProfileRepository.get_by_user_id(db, current_user.id)
     if not profile:
-        # Create an initial default profile if not exists
+        # Create a clean, user-specific profile waiting for resume upload or custom entry
         default_data = {
-            "full_name": current_user.full_name or "Vivek Rajawat",
+            "full_name": current_user.full_name or "",
             "email": current_user.email,
-            "target_roles": ["Python Developer", "Backend Engineer", "AI Engineer"],
-            "skills": ["Python", "FastAPI", "Django", "PostgreSQL", "Docker", "Redis", "React"],
+            "target_roles": [],
+            "skills": [],
             "experience_level": "Entry Level",
-            "preferred_locations": ["Indore", "Delhi", "Bangalore", "Pune", "Hyderabad", "Remote"],
-            "work_preferences": ["Remote", "Hybrid"],
-            "summary": "Motivated software engineer with experience in Python, FastAPI, and scalable backend systems."
+            "preferred_locations": ["Remote"],
+            "work_preferences": ["Remote"],
+            "summary": ""
         }
         profile = ProfileRepository.create_or_update(db, current_user.id, default_data)
 
@@ -67,12 +67,12 @@ def get_search_queries(
     db: Session = Depends(get_db)
 ):
     profile = ProfileRepository.get_by_user_id(db, current_user.id)
-    if not profile:
+    if not profile or (not profile.target_roles and not profile.skills):
         return JobSearchQueryList(queries=[
-            "Python Developer Remote",
-            "Python Backend Engineer Delhi",
-            "FastAPI Developer Bangalore",
-            "AI Engineer India"
+            "Software Engineer Remote",
+            "Frontend Developer Remote",
+            "Backend Engineer Remote",
+            "Full Stack Developer Remote"
         ])
 
     queries = AIService.generate_search_queries(

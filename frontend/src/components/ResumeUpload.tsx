@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2, RefreshCw, Calendar, FileCheck } from 'lucide-react';
 import { api } from '../services/api';
-import type { ActiveResumeResponse } from '../types';
+import type { ActiveResumeResponse, User } from '../types';
 
 interface ResumeUploadProps {
+  user: User | null;
   onUploadSuccess: () => void;
 }
 
-export const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUploadSuccess }) => {
+export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSuccess }) => {
   const [activeResumeInfo, setActiveResumeInfo] = useState<ActiveResumeResponse | null>(null);
-  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showReuploadForm, setShowReuploadForm] = useState(false);
@@ -29,14 +30,24 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUploadSuccess }) =
       }
     } catch (err) {
       console.error('Failed to fetch active resume status:', err);
+      setActiveResumeInfo(null);
+      setShowReuploadForm(true);
     } finally {
       setIsLoadingStatus(false);
     }
   };
 
   useEffect(() => {
-    fetchActiveResume();
-  }, []);
+    setStatusMessage(null);
+    setSelectedFileName(null);
+    if (user) {
+      fetchActiveResume();
+    } else {
+      setActiveResumeInfo(null);
+      setShowReuploadForm(true);
+      setIsLoadingStatus(false);
+    }
+  }, [user?.id]);
 
   const handleFileProcess = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();

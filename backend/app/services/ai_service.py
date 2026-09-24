@@ -6,13 +6,17 @@ from app.core.config import settings
 from app.utils.text_helpers import extract_skills_from_text, extract_contact_info
 
 COMMON_ROLE_PATTERNS = [
-    (r"\b(?:python developer|python engineer|backend developer|backend engineer)\b", "Python Developer"),
-    (r"\b(?:fastapi developer|fastapi engineer)\b", "FastAPI Engineer"),
-    (r"\b(?:full stack developer|full stack engineer|fullstack developer)\b", "Full Stack Developer"),
-    (r"\b(?:ai engineer|machine learning engineer|ml engineer|data scientist)\b", "AI Engineer"),
-    (r"\b(?:software engineer|software developer|sde)\b", "Software Engineer"),
-    (r"\b(?:frontend developer|react developer|frontend engineer)\b", "Frontend Engineer"),
-    (r"\b(?:devops engineer|cloud engineer|sre)\b", "DevOps Engineer"),
+    (r"\b(?:python developer|python engineer|django developer|fastapi developer)\b", "Python Developer"),
+    (r"\b(?:backend developer|backend engineer|backend lead)\b", "Backend Engineer"),
+    (r"\b(?:frontend developer|frontend engineer|react developer|react engineer|vue developer|angular developer|ui engineer)\b", "Frontend Engineer"),
+    (r"\b(?:full stack developer|full stack engineer|fullstack developer|fullstack engineer)\b", "Full Stack Developer"),
+    (r"\b(?:ai engineer|machine learning engineer|ml engineer|data scientist|ai/ml engineer)\b", "AI Engineer"),
+    (r"\b(?:data engineer|data analyst|bi engineer|analytics engineer)\b", "Data Engineer"),
+    (r"\b(?:devops engineer|cloud engineer|sre|site reliability engineer|infrastructure engineer)\b", "DevOps Engineer"),
+    (r"\b(?:mobile developer|android developer|ios developer|flutter developer|react native developer)\b", "Mobile Developer"),
+    (r"\b(?:qa engineer|quality assurance|sdet|test automation engineer)\b", "QA Engineer"),
+    (r"\b(?:product manager|technical product manager|project manager)\b", "Product Manager"),
+    (r"\b(?:software engineer|software developer|sde|sde-1|sde-2|sde-3)\b", "Software Engineer"),
 ]
 
 
@@ -63,7 +67,7 @@ class AIService:
         # 3. Skills extraction
         skills = extract_skills_from_text(text)
         if not skills:
-            skills = ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API"]
+            skills = []
 
         # 4. Roles extraction
         roles = []
@@ -73,12 +77,17 @@ class AIService:
                 roles.append(role_title)
 
         if not roles:
-            if "python" in skills:
-                roles.extend(["Python Developer", "Backend Engineer"])
-            if "ai" in text_lower or "machine learning" in text_lower:
+            # Fallback based on extracted top skills from resume
+            if any(s in skills for s in ["React", "Vue", "Angular", "Next.js", "HTML5", "CSS3", "Tailwind CSS"]):
+                roles.append("Frontend Engineer")
+            if any(s in skills for s in ["Python", "FastAPI", "Django", "Flask", "Node.js", "Express", "Go", "Golang", "Java", "Spring Boot"]):
+                roles.append("Backend Engineer")
+            if any(s in skills for s in ["Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "Pandas", "Scikit-Learn"]):
                 roles.append("AI Engineer")
+            if any(s in skills for s in ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "Terraform", "CI/CD"]):
+                roles.append("DevOps Engineer")
             if not roles:
-                roles = ["Software Engineer", "Backend Developer"]
+                roles = ["Software Engineer"]
 
         # Deduplicate roles preserving order
         unique_roles = list(dict.fromkeys(roles))
@@ -103,7 +112,7 @@ class AIService:
             f"{name} is an ambitious {experience_level.lower()} professional specializing in "
             f"{', '.join(unique_roles[:2])}. Proficient in core modern technologies including "
             f"{', '.join(skills[:5])}."
-        )
+        ) if skills else f"{name} is a software engineering candidate."
 
         return {
             "full_name": name,
@@ -122,28 +131,52 @@ class AIService:
         preferred_locations: List[str],
         skills: List[str]
     ) -> List[str]:
-        """Generates dynamic, targeted job search queries for public ATS boards."""
+        """Generates dynamic, targeted job search queries strictly according to the candidate's resume."""
+        # When no roles or skills exist (new account before resume upload)
+        if not target_roles and not skills:
+            return [
+                "Software Engineer Remote",
+                "Frontend Developer Remote",
+                "Backend Engineer Remote",
+                "Full Stack Developer Remote"
+            ]
+
         queries = []
-        primary_roles = target_roles[:3] or ["Software Engineer", "Python Developer"]
-        locs = preferred_locations[:3] or ["Remote", "Bangalore", "Delhi"]
+        primary_roles = [r for r in target_roles if r]
+        if not primary_roles:
+            primary_roles = ["Software Engineer"]
 
-        # Pair primary roles with locations
-        for role in primary_roles:
-            for loc in locs:
+        locs = [l for l in preferred_locations if l]
+        if not locs:
+            locs = ["Remote"]
+
+        # 1. Pair candidate's actual target roles with locations
+        for role in primary_roles[:2]:
+            for loc in locs[:2]:
                 queries.append(f"{role} {loc}")
+            if "Remote" not in locs:
+                queries.append(f"{role} Remote")
 
-        # Pair key skill with role and location
-        top_skill = skills[0] if skills else "Python"
-        queries.append(f"{top_skill} Backend Engineer Remote")
-        queries.append(f"{top_skill} Developer India")
+        # 2. Pair candidate's top extracted resume skills with role & location
+        if skills:
+            top_skills = skills[:3]
+            lead_role = primary_roles[0]
+            for sk in top_skills:
+                # Skill + Lead Role (e.g. "React Frontend Engineer" or "FastAPI Python Developer")
+                if sk.lower() not in lead_role.lower():
+                    queries.append(f"{sk} {lead_role}")
+                queries.append(f"{sk} Developer Remote")
+            if len(top_skills) >= 2:
+                queries.append(f"{top_skills[0]} {top_skills[1]} Developer")
 
-        # Deduplicate
+        # Deduplicate preserving order
         seen = set()
         deduped = []
         for q in queries:
-            if q.lower() not in seen:
-                seen.add(q.lower())
-                deduped.append(q)
+            normalized = " ".join(q.split())
+            if normalized.lower() not in seen:
+                seen.add(normalized.lower())
+                deduped.append(normalized)
 
         return deduped[:8]
 

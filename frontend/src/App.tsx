@@ -60,7 +60,13 @@ export const App: React.FC = () => {
       ]);
       setUser(userData);
       setProfile(profileData);
-      setQueries(profileData.search_queries || []);
+      const queryList = profileData.search_queries || [];
+      setQueries(queryList);
+      if (queryList.length > 0) {
+        setActiveQuery(queryList[0]);
+      } else {
+        setActiveQuery('Software Engineer Remote');
+      }
       setApplications(appsData);
 
       // Perform initial job discovery search
@@ -80,10 +86,11 @@ export const App: React.FC = () => {
     try {
       const updatedProfile = await api.getProfile();
       setProfile(updatedProfile);
-      setQueries(updatedProfile.search_queries || []);
+      const queryList = updatedProfile.search_queries || [];
+      setQueries(queryList);
 
-      // Trigger automatic search with first extracted query
-      const firstQuery = updatedProfile.search_queries?.[0] || 'Python Developer Remote';
+      // Trigger automatic search with first extracted query strictly from resume
+      const firstQuery = queryList[0] || 'Software Engineer Remote';
       setActiveQuery(firstQuery);
       handleSearch(firstQuery);
     } catch (err) {
@@ -158,12 +165,19 @@ export const App: React.FC = () => {
     setUser(null);
     setProfile(null);
     setJobs([]);
+    setQueries([]);
     setApplications([]);
     setIsAuthModalOpen(true);
   };
 
-  const handleAuthSuccess = () => {
-    loadInitialData();
+  const handleAuthSuccess = async () => {
+    // Reset transient state before loading new account data
+    setUser(null);
+    setProfile(null);
+    setJobs([]);
+    setQueries([]);
+    setApplications([]);
+    await loadInitialData();
   };
 
   // Refresh Applications
@@ -240,7 +254,7 @@ export const App: React.FC = () => {
         {activeTab === 'jobs' && (
           <div className="space-y-8">
             {/* Step 1 & 2: Resume Upload Dropzone & Active Status Card */}
-            <ResumeUpload onUploadSuccess={handleUploadSuccess} />
+            <ResumeUpload user={user} onUploadSuccess={handleUploadSuccess} />
 
             {/* Step 3: Auto-Generated Search Queries & Custom Bar */}
             <SearchQueryBar
@@ -269,7 +283,7 @@ export const App: React.FC = () => {
         {/* Tab 2: Candidate Profile Editor */}
         {activeTab === 'profile' && (
           <div className="space-y-6">
-            <ProfileEditor profile={profile} onUpdateProfile={handleUpdateProfile} />
+            <ProfileEditor key={profile?.id || user?.id || 'profile'} profile={profile} onUpdateProfile={handleUpdateProfile} />
           </div>
         )}
 

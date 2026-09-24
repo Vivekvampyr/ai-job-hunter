@@ -21,6 +21,8 @@ export const MatchBadge: React.FC<MatchBadgeProps> = ({ match }) => {
         return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40';
       case 'Medium':
         return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 hover:bg-amber-100/80 dark:hover:bg-amber-900/40';
+      case 'Pending':
+        return 'bg-zinc-100 dark:bg-[#25262c] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700/60 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60';
       case 'Low':
       default:
         return 'bg-zinc-100 dark:bg-[#282930] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700';
@@ -33,6 +35,8 @@ export const MatchBadge: React.FC<MatchBadgeProps> = ({ match }) => {
         return 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
       case 'Medium':
         return 'bg-amber-500 dark:bg-amber-400';
+      case 'Pending':
+        return 'bg-zinc-400 dark:bg-zinc-500';
       case 'Low':
       default:
         return 'bg-zinc-400 dark:bg-zinc-500';
@@ -48,7 +52,7 @@ export const MatchBadge: React.FC<MatchBadgeProps> = ({ match }) => {
         className={`px-2.5 py-1 text-xs font-semibold rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${getBadgeStyle()}`}
       >
         <span className={`w-2 h-2 rounded-full ${getDotStyle()}`} />
-        <span>{match_level} Match</span>
+        <span>{match_level === 'Pending' ? 'No Resume' : `${match_level} Match`}</span>
         <span className="text-[11px] font-mono opacity-90">({match_score}%)</span>
         <Info className="w-3 h-3 opacity-60 ml-0.5" />
       </button>
@@ -64,10 +68,12 @@ export const MatchBadge: React.FC<MatchBadgeProps> = ({ match }) => {
                   ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
                   : match_level === 'Medium'
                   ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                  : match_level === 'Pending'
+                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
               }`}
             >
-              Score: {match_score}/100
+              {match_level === 'Pending' ? 'Awaiting Resume' : `${match_score}% Score`}
             </span>
           </div>
 

@@ -20,6 +20,18 @@ class MatchingEngine:
         job_required_skills: List[str],
         job_description: str
     ) -> JobMatchDetail:
+        # Check if candidate has no resume / skills extracted yet
+        if not candidate_skills and not candidate_roles:
+            return JobMatchDetail(
+                match_level="Pending",
+                match_score=0,
+                matched_skills=[],
+                missing_skills=[],
+                role_fit="Pending",
+                location_fit="Pending",
+                reasons=["Upload your resume to calculate your personalized match score and highlight matching skills."]
+            )
+
         # Normalize skill sets
         cand_skills_lower = {s.lower(): s for s in candidate_skills}
         
