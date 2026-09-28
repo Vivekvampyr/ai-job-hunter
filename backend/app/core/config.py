@@ -20,11 +20,13 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: Optional[str]) -> str:
-        raw = os.getenv("SUPABASE_POSTGRES_URL") or v or "sqlite:///./ai_job_hunter.db"
+        raw = os.getenv("SUPABASE_POSTGRES_URL") or os.getenv("DATABASE_URL") or v or "sqlite:///./ai_job_hunter.db"
         if raw:
             raw = raw.strip().strip('"').strip("'")
             if raw.startswith("postgres://"):
-                raw = raw.replace("postgres://", "postgresql://", 1)
+                raw = raw.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif raw.startswith("postgresql://") and not raw.startswith("postgresql+"):
+                raw = raw.replace("postgresql://", "postgresql+psycopg2://", 1)
         return raw
     
     # Security & JWT
