@@ -39,6 +39,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"message": "Welcome to the AI Job Hunter Backend", "version": settings.VERSION}
+
 # Health Check
 @app.get("/health", tags=["Health"])
 def health_check():
