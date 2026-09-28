@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
+    title="AI Job Hunter Backend",
     version=settings.VERSION,
     description="Production-quality MVP helping job seekers discover jobs from public ATS APIs with zero unauthorized scraping.",
     lifespan=lifespan,
