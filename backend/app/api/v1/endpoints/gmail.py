@@ -75,3 +75,27 @@ def disconnect_gmail(
         gmail_email=None,
         created_at=current_user.created_at
     )
+
+
+@router.post("/connect-demo", response_model=UserResponse)
+def connect_demo_gmail(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Instantly connects a simulated Gmail account for local testing without Google Cloud setup."""
+    current_user.gmail_access_token = "demo_access_token_simulated"
+    current_user.gmail_refresh_token = "demo_refresh_token_simulated"
+    current_user.gmail_email = current_user.email or "candidate@example.com"
+
+    db.commit()
+    db.refresh(current_user)
+
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        is_active=current_user.is_active,
+        is_gmail_connected=True,
+        gmail_email=current_user.gmail_email,
+        created_at=current_user.created_at
+    )

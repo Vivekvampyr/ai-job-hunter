@@ -223,6 +223,11 @@ export const api = {
     return res.data;
   },
 
+  async connectDemoGmail(): Promise<User> {
+    const res = await apiClient.post<User>('/gmail/connect-demo');
+    return res.data;
+  },
+
   async disconnectGmail(): Promise<User> {
     const res = await apiClient.post<User>('/gmail/disconnect');
     return res.data;

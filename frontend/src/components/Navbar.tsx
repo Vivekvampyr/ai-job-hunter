@@ -7,6 +7,7 @@ interface NavbarProps {
   activeTab: 'jobs' | 'profile' | 'applications';
   setActiveTab: (tab: 'jobs' | 'profile' | 'applications') => void;
   onConnectGmail: () => void;
+  onConnectDemoGmail?: () => void;
   onDisconnectGmail: () => void;
   onOpenAuth: () => void;
   onLogout: () => void;
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onConnectGmail,
+  onConnectDemoGmail,
   onDisconnectGmail,
   onOpenAuth,
   onLogout,
@@ -115,13 +117,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           ) : (
-            <button
-              onClick={onConnectGmail}
-              className="flex items-center space-x-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-[#262933] hover:bg-zinc-50 dark:hover:bg-[#1c1f26] text-zinc-700 dark:text-zinc-300 text-xs transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">Connect Gmail</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onConnectGmail}
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-[#262933] hover:bg-zinc-50 dark:hover:bg-[#1c1f26] text-zinc-700 dark:text-zinc-300 text-xs transition-colors"
+                title="Connect official Google account via OAuth"
+              >
+                <Mail className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="hidden sm:inline">Connect Gmail</span>
+              </button>
+              {onConnectDemoGmail && (
+                <button
+                  onClick={onConnectDemoGmail}
+                  className="hidden md:inline-flex items-center px-1.5 py-1 rounded text-[10px] font-mono text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#1c1f26] border border-dashed border-zinc-300 dark:border-zinc-700 transition-colors"
+                  title="Connect simulated test inbox without Google Cloud setup"
+                >
+                  Test Demo
+                </button>
+              )}
+            </div>
           )}
 
           {/* User Auth */}

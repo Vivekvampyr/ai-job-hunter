@@ -78,6 +78,21 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // Process OAuth callback if returning from Google OAuth
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      api.connectGmail(code)
+        .then((updatedUser) => {
+          setUser(updatedUser);
+          window.history.replaceState({}, document.title, window.location.pathname || '/');
+        })
+        .catch((err) => {
+          console.error('Failed completing Google OAuth:', err);
+          window.history.replaceState({}, document.title, window.location.pathname || '/');
+        });
+    }
+
     loadInitialData();
   }, []);
 
@@ -157,13 +172,21 @@ export const App: React.FC = () => {
     setIsEmailModalOpen(true);
   };
 
-  // Gmail OAuth Connect
   const handleConnectGmail = async () => {
     try {
       const authUrl = await api.getGmailAuthUrl();
       window.location.href = authUrl;
     } catch (err) {
       alert('Could not start Gmail OAuth. Check backend settings.');
+    }
+  };
+
+  const handleConnectDemoGmail = async () => {
+    try {
+      const updatedUser = await api.connectDemoGmail();
+      setUser(updatedUser);
+    } catch (err) {
+      console.error('Failed connecting demo Gmail:', err);
     }
   };
 
@@ -219,6 +242,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onConnectGmail={handleConnectGmail}
+        onConnectDemoGmail={handleConnectDemoGmail}
         onDisconnectGmail={handleDisconnectGmail}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
