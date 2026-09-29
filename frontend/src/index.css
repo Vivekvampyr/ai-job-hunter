@@ -4,67 +4,67 @@
 
 @layer base {
   :root {
-    /* Light Theme (Clean, Crisp Monochromatic) */
-    --background: 220 14% 96%; /* #f4f5f7 soft neutral light grey */
-    --foreground: 240 10% 4%; /* #09090b rich charcoal black */
+    /* Light Theme (Clean Technical Document / Notion style) */
+    --background: 210 20% 98%; /* #f8f9fa */
+    --foreground: 220 25% 10%; /* #111827 */
 
-    --card: 0 0% 100%; /* #ffffff pure white card */
-    --card-foreground: 240 10% 4%;
+    --card: 0 0% 100%; /* #ffffff */
+    --card-foreground: 220 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 240 6% 10%; /* #18181b */
-    --primary-foreground: 0 0% 98%;
+    --primary: 199 89% 39%; /* Steel Blue #0284c7 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 94%; /* #ececee */
-    --secondary-foreground: 240 6% 10%;
+    --secondary: 220 14% 96%; /* #f1f3f5 */
+    --secondary-foreground: 220 25% 10%;
 
-    --muted: 240 5% 92%;
-    --muted-foreground: 240 4% 46%; /* #71717a */
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 9% 46%; /* #6b7280 */
 
-    --accent: 240 5% 94%;
-    --accent-foreground: 240 6% 10%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 25% 10%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 6% 88%; /* #e1e1e6 crisp light border */
-    --input: 240 6% 88%;
-    --ring: 240 6% 10%;
+    --border: 220 13% 91%; /* #e5e7eb crisp 1px border */
+    --input: 220 13% 91%;
+    --ring: 199 89% 39%;
 
-    --radius: 0.625rem;
+    --radius: 0.25rem; /* 4px */
   }
 
   .dark {
-    /* Dark Theme (Sleek Charcoal Slate Grey, NOT pitch black) */
-    --background: 228 10% 12%; /* #1a1b1f soft dark charcoal grey */
-    --foreground: 0 0% 98%; /* #f4f4f5 crisp bright readable white */
+    /* Dark Theme (Engineered Charcoal Slate / Linear style, NOT inverted) */
+    --background: 225 10% 7%; /* #0f1013 deep charcoal */
+    --foreground: 210 20% 96%; /* #f3f4f6 crisp white */
 
-    --card: 228 9% 16%; /* #222329 elevated grey surface */
-    --card-foreground: 0 0% 98%;
+    --card: 223 13% 10%; /* #15171c dense surface */
+    --card-foreground: 210 20% 96%;
 
-    --popover: 228 9% 16%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 223 13% 10%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 0 0% 98%; /* White button in dark mode */
-    --primary-foreground: 240 6% 10%;
+    --primary: 199 89% 39%; /* Steel Blue #0284c7 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 8% 21%; /* #2f3038 */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 222 13% 13%; /* #1c1f26 */
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 228 8% 21%;
-    --muted-foreground: 240 5% 65%; /* #a1a1aa */
+    --muted: 222 13% 13%;
+    --muted-foreground: 218 10% 58%; /* #8b929e */
 
-    --accent: 228 8% 21%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 222 13% 13%;
+    --accent-foreground: 210 20% 96%;
 
-    --destructive: 0 63% 31%;
+    --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 228 7% 24%; /* #373842 clean subtle grey border */
-    --input: 228 7% 24%;
-    --ring: 0 0% 98%;
+    --border: 224 14% 17%; /* #262933 crisp hairline border */
+    --input: 224 14% 17%;
+    --ring: 199 89% 39%;
   }
 }
 
@@ -73,12 +73,17 @@ body {
   min-height: 100vh;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom minimal scrollbar */
+/* Tabular figures for JetBrains Mono */
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Custom crisp minimal scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -88,16 +93,16 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
-  border-radius: 9999px;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
 
-/* Clean Monochromatic Card Panel */
-.glass-panel {
+/* Crisp 1px border working panel - zero shadows */
+.tool-panel, .glass-panel {
   background-color: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: 4px;
+  box-shadow: none !important;
 }

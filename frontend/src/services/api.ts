@@ -21,7 +21,7 @@ const apiClient = axios.create({
 // Attach JWT token from localStorage if present
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
+  if (token && token !== 'undefined' && token !== 'null') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -30,6 +30,7 @@ apiClient.interceptors.request.use((config) => {
 export const api = {
   // Authentication
   async register(data: { email: string; password: string; full_name: string }): Promise<AuthTokenResponse> {
+    localStorage.removeItem('token');
     const res = await apiClient.post<AuthTokenResponse>('/auth/register', data);
     if (res.data.access_token) {
       localStorage.setItem('token', res.data.access_token);
@@ -38,6 +39,7 @@ export const api = {
   },
 
   async login(data: { email: string; password: string }): Promise<AuthTokenResponse> {
+    localStorage.removeItem('token');
     const res = await apiClient.post<AuthTokenResponse>('/auth/login', data);
     if (res.data.access_token) {
       localStorage.setItem('token', res.data.access_token);
@@ -46,6 +48,7 @@ export const api = {
   },
 
   async loginDemo(): Promise<AuthTokenResponse> {
+    localStorage.removeItem('token');
     const res = await apiClient.post<AuthTokenResponse>('/auth/demo');
     if (res.data.access_token) {
       localStorage.setItem('token', res.data.access_token);
@@ -161,6 +164,52 @@ export const api = {
     if (params?.work_mode && params.work_mode !== 'All') queryParams.append('work_mode', params.work_mode);
     if (params?.match_level && params.match_level !== 'All') queryParams.append('match_level', params.match_level);
     return `${API_BASE_URL}/export/excel?${queryParams.toString()}`;
+  },
+
+  // Authenticated direct Excel file download with guaranteed .xlsx extension
+  async downloadExcel(params?: {
+    query?: string;
+    location?: string;
+    work_mode?: string;
+    match_level?: string;
+    job_ids?: string[];
+  }): Promise<void> {
+    const payload: Record<string, any> = {};
+    if (params?.job_ids && params.job_ids.length > 0) payload.job_ids = params.job_ids;
+    if (params?.query) payload.query = params.query;
+    if (params?.location && params.location !== 'All') payload.location = params.location;
+    if (params?.work_mode && params.work_mode !== 'All') payload.work_mode = params.work_mode;
+    if (params?.match_level && params.match_level !== 'All') payload.match_level = params.match_level;
+
+    const res = (payload.job_ids && payload.job_ids.length > 0)
+      ? await apiClient.post('/export/excel', payload, { responseType: 'blob' })
+      : await apiClient.get('/export/excel', { params: payload, responseType: 'blob' });
+
+    const blob = new Blob([res.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    // Default clean filename
+    let filename = 'AI_Job_Hunter_Matches.xlsx';
+    const disposition = res.headers['content-disposition'];
+    if (disposition) {
+      const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, '').trim();
+      }
+    }
+    if (!filename.endsWith('.xlsx')) {
+      filename += '.xlsx';
+    }
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
   },
 
   // Gmail OAuth

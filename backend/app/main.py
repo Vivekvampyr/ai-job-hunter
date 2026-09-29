@@ -23,20 +23,29 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS Middleware - permits localhost, custom origins, and any *.vercel.app deployment
+# CORS Middleware - permits any localhost / 127.0.0.1 port, custom origins, and *.vercel.app deployments
 origins = [str(o).strip() for o in settings.BACKEND_CORS_ORIGINS if o != "*"]
-if "http://localhost:5173" not in origins:
-    origins.append("http://localhost:5173")
-if "http://localhost:3000" not in origins:
-    origins.append("http://localhost:3000")
+for common_origin in [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+]:
+    if common_origin not in origins:
+        origins.append(common_origin)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+    allow_origin_regex=r"^(https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:[0-9]+)?|https:\/\/.*\.vercel\.app)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 @app.get("/")

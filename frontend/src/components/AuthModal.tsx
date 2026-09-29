@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User as UserIcon, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { X, Lock, Mail, User as UserIcon, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 
 interface AuthModalProps {
@@ -45,7 +45,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
       onAuthSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err?.response?.data?.detail || 'Authentication failed. Please check your credentials.');
+      const detail = err?.response?.data?.detail;
+      let msg = 'Authentication failed. Please check your credentials.';
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        msg = detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
+      }
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -66,44 +73,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-[#373842] bg-white dark:bg-[#222329] flex flex-col transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded overflow-hidden border border-zinc-200 dark:border-[#262933] bg-white dark:bg-[#15171c] flex flex-col transition-colors">
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200 dark:border-[#373842] flex items-center justify-between bg-zinc-50 dark:bg-[#1f2025]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800/50 shadow-sm">
-              <Lock className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {mode === 'login' ? 'Sign In to AI Job Hunter' : 'Create Your Account'}
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {mode === 'login'
-                  ? 'Access your resume, ATS matches & sent applications'
-                  : 'Start discovering relevant jobs and sending tailored outreach'}
-              </p>
-            </div>
+        <div className="p-3 border-b border-zinc-200 dark:border-[#262933] flex items-center justify-between bg-zinc-50/50 dark:bg-[#111317]">
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+              {mode === 'login' ? 'Sign In' : 'Create Account'}
+            </h3>
+            <p className="text-[11px] text-zinc-500">
+              {mode === 'login'
+                ? 'Access saved preferences and application drafts'
+                : 'Save preferences and configure outreach'}
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-[#2b2c34] transition-colors cursor-pointer"
+            className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-[#1c1f26] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Mode Switch Tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-[#373842] bg-zinc-100 dark:bg-[#1a1b1f]">
+        <div className="flex border-b border-zinc-200 dark:border-[#262933] bg-zinc-50/50 dark:bg-[#111317]">
           <button
             type="button"
             onClick={() => {
               setMode('login');
               setErrorMsg(null);
             }}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition-all cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
               mode === 'login'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-500 bg-white dark:bg-[#222329]'
+                ? 'text-zinc-900 dark:text-zinc-100 border-b-2 border-sky-600 bg-white dark:bg-[#15171c] font-semibold'
                 : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
@@ -115,9 +117,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
               setMode('register');
               setErrorMsg(null);
             }}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition-all cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
               mode === 'register'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-500 bg-white dark:bg-[#222329]'
+                ? 'text-zinc-900 dark:text-zinc-100 border-b-2 border-sky-600 bg-white dark:bg-[#15171c] font-semibold'
                 : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
@@ -126,50 +128,56 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-3.5 space-y-3 text-xs">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <div className="p-2 rounded border border-red-300 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/20 text-red-700 dark:text-red-300 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {mode === 'register' && (
             <div>
-              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Full Name</label>
+              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                Full Name
+              </label>
               <div className="relative">
-                <UserIcon className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+                <UserIcon className="w-3.5 h-3.5 absolute left-2.5 top-2 text-zinc-400" />
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Vivek Rajawat"
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-300 dark:border-[#373842] rounded-xl text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
+                  className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600 transition-colors"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Email Address</label>
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+              Email Address
+            </label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+              <Mail className="w-3.5 h-3.5 absolute left-2.5 top-2 text-zinc-400" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-300 dark:border-[#373842] rounded-xl text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
+                className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600 transition-colors font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Password</label>
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+              Password
+            </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+              <Lock className="w-3.5 h-3.5 absolute left-2.5 top-2 text-zinc-400" />
               <input
                 type="password"
                 required
@@ -177,7 +185,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-300 dark:border-[#373842] rounded-xl text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
+                className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600 transition-colors"
               />
             </div>
           </div>
@@ -185,11 +193,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+            className="w-full py-1.5 text-xs font-medium rounded bg-sky-600 hover:bg-sky-500 text-white transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
             {loading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" />
                 <span>Processing...</span>
               </>
             ) : (
@@ -197,12 +205,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
             )}
           </button>
 
-          <div className="relative my-3 text-center">
+          <div className="relative my-2 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200 dark:border-[#373842]"></div>
+              <div className="w-full border-t border-zinc-200 dark:border-[#262933]"></div>
             </div>
-            <span className="relative px-2 bg-white dark:bg-[#222329] text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
-              Or Try Instantly
+            <span className="relative px-2 bg-white dark:bg-[#15171c] text-[10px] text-zinc-400 font-mono">
+              OR
             </span>
           </div>
 
@@ -210,13 +218,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
             type="button"
             onClick={handleDemoLogin}
             disabled={loading}
-            className="w-full py-2 text-xs font-semibold rounded-xl bg-white dark:bg-[#27282f] hover:bg-zinc-50 dark:hover:bg-[#32333b] hover:text-indigo-600 dark:hover:text-indigo-400 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-[#373842] transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+            className="w-full py-1.5 text-xs font-medium rounded border border-zinc-200 dark:border-[#262933] bg-zinc-50 dark:bg-[#111317] hover:bg-zinc-100 dark:hover:bg-[#1c1f26] text-zinc-700 dark:text-zinc-300 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Continue as Demo Candidate (Vivek Rajawat)</span>
+            Continue as Demo Candidate (Vivek Rajawat)
           </button>
         </form>
       </div>
     </div>
   );
 };
+
+export default AuthModal;

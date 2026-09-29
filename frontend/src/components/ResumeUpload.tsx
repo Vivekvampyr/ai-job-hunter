@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2, RefreshCw, Calendar, FileCheck } from 'lucide-react';
+import { FileText, Loader2, AlertCircle, Check } from 'lucide-react';
 import { api } from '../services/api';
 import type { ActiveResumeResponse, User } from '../types';
 
@@ -23,11 +23,7 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
     try {
       const data = await api.getCurrentResume();
       setActiveResumeInfo(data);
-      if (data.has_resume) {
-        setShowReuploadForm(false);
-      } else {
-        setShowReuploadForm(true);
-      }
+      setShowReuploadForm(!data.has_resume);
     } catch (err) {
       console.error('Failed to fetch active resume status:', err);
       setActiveResumeInfo(null);
@@ -54,7 +50,7 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
     if (!['pdf', 'docx', 'doc'].includes(ext || '')) {
       setStatusMessage({
         type: 'error',
-        text: 'Please upload a valid PDF or DOCX resume document.',
+        text: 'Please upload a PDF or DOCX file.',
       });
       return;
     }
@@ -64,17 +60,17 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
     setStatusMessage(null);
 
     try {
-      const res = await api.uploadResume(file);
+      await api.uploadResume(file);
       setStatusMessage({
         type: 'success',
-        text: `${res.message} Extracted profile updated!`,
+        text: 'Resume uploaded and profile updated.',
       });
       await fetchActiveResume();
       onUploadSuccess();
     } catch (err: any) {
       setStatusMessage({
         type: 'error',
-        text: err?.response?.data?.detail || 'Failed to process resume. Please try again.',
+        text: err?.response?.data?.detail || 'Failed to process resume.',
       });
     } finally {
       setUploading(false);
@@ -105,94 +101,52 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
   };
 
   return (
-    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <UploadCloud className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            Resume Management
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Parses candidate profile, skills, roles, and location preferences for public ATS matching.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {activeResumeInfo?.has_resume && (
-            <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Resume Active
-            </span>
-          )}
-          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-[#27282f] text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-[#373842]">
-            Step 1
-          </span>
-        </div>
-      </div>
-
-      {/* Loading active resume check */}
+    <div className="bg-white dark:bg-[#15171c] border border-zinc-200 dark:border-[#262933] rounded p-3 space-y-2">
+      {/* Loading state */}
       {isLoadingStatus && (
-        <div className="p-4 rounded-xl bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-200 dark:border-[#373842] flex items-center justify-center gap-2 text-xs text-zinc-500">
-          <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-          <span>Checking active resume status...</span>
+        <div className="flex items-center gap-2 text-xs text-zinc-500 py-1">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <span>Checking resume status...</span>
         </div>
       )}
 
-      {/* Active Resume State Card */}
+      {/* Active Resume Bar */}
       {!isLoadingStatus && activeResumeInfo?.has_resume && !showReuploadForm && (
-        <div className="p-4 rounded-xl bg-zinc-50/80 dark:bg-[#1f2025] border border-emerald-200/80 dark:border-emerald-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-800/50 shrink-0 shadow-sm">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
-                  {activeResumeInfo.resume?.file_name}
-                </span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  {activeResumeInfo.resume?.file_type}
-                </span>
-                <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
-                  ({Math.round((activeResumeInfo.resume?.file_size || 0) / 1024)} KB)
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1 font-mono text-[11px]">
-                <Calendar className="w-3 h-3 text-zinc-400" />
-                Uploaded {activeResumeInfo.resume?.uploaded_at ? new Date(activeResumeInfo.resume.uploaded_at).toLocaleDateString() : 'Recently'}
-              </p>
-              {activeResumeInfo.preview_text_snippet && (
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-2 bg-white dark:bg-[#16171a] p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 line-clamp-2">
-                  "{activeResumeInfo.preview_text_snippet}"
-                </p>
-              )}
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span className="text-zinc-500">Active Resume:</span>
+            <span className="font-medium text-zinc-900 dark:text-zinc-100 font-mono">
+              {activeResumeInfo.resume?.file_name}
+            </span>
+            <span className="text-zinc-400 font-mono text-[11px]">
+              ({Math.round((activeResumeInfo.resume?.file_size || 0) / 1024)} KB)
+            </span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setShowReuploadForm(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-[#27282f] hover:bg-zinc-50 dark:hover:bg-[#32333b] text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-[#373842] hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors flex items-center gap-1.5 shadow-sm"
+              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 px-2 py-0.5 rounded border border-zinc-200 dark:border-[#262933] hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Replace Resume</span>
+              Replace Resume
             </button>
           </div>
         </div>
       )}
 
-      {/* Drop Zone (Shown when no resume exists or user clicked Replace) */}
-      {(showReuploadForm || !activeResumeInfo?.has_resume) && (
+      {/* Drop Zone (when no resume or replacing) */}
+      {(showReuploadForm || !activeResumeInfo?.has_resume) && !isLoadingStatus && (
         <div>
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-7 text-center cursor-pointer transition-all ${
+            className={`border border-dashed rounded p-4 text-center cursor-pointer transition-colors ${
               isDragging
-                ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100/70 dark:bg-zinc-800/50'
-                : 'border-zinc-300 dark:border-zinc-700/80 hover:border-zinc-500 dark:hover:border-zinc-500 bg-zinc-50/50 dark:bg-[#1a1b1f]/50 hover:bg-zinc-50 dark:hover:bg-[#1a1b1f]'
+                ? 'border-sky-600 bg-sky-50/20 dark:bg-sky-950/20'
+                : 'border-zinc-300 dark:border-[#262933] hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50/50 dark:bg-[#0f1013]'
             }`}
           >
             <input
@@ -204,60 +158,52 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
             />
 
             {uploading ? (
-              <div className="flex flex-col items-center justify-center py-4 space-y-2.5">
-                <Loader2 className="w-7 h-7 text-zinc-800 dark:text-zinc-200 animate-spin" />
-                <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  Parsing resume & extracting profile...
-                </div>
-                <p className="text-xs text-zinc-500">Structuring candidate skills, target roles, and work mode</p>
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 py-1">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                <span>Parsing resume and extracting skills...</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-2 space-y-2">
-                <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center mb-1 border border-zinc-200 dark:border-zinc-700">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                <span>
                   {selectedFileName ? (
-                    <span className="font-semibold">{selectedFileName}</span>
+                    <span className="font-mono text-zinc-900 dark:text-zinc-100">{selectedFileName}</span>
                   ) : (
-                    'Drop your PDF or DOCX resume here, or click to browse'
+                    'Upload resume (PDF or DOCX) to match positions'
                   )}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Supports <span className="font-mono text-zinc-700 dark:text-zinc-300">PDF</span> and{' '}
-                  <span className="font-mono text-zinc-700 dark:text-zinc-300">DOCX</span> (up to 10MB)
-                </p>
+                </span>
+                <span className="text-[11px] text-zinc-400">Click or drag file</span>
               </div>
             )}
           </div>
 
           {activeResumeInfo?.has_resume && (
-            <div className="mt-2 text-right">
+            <div className="mt-1 text-right">
               <button
                 type="button"
                 onClick={() => setShowReuploadForm(false)}
-                className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline"
+                className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
               >
-                Cancel & Keep Current Resume
+                Cancel
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* Status Feedback */}
+      {/* Status Message */}
       {statusMessage && (
         <div
-          className={`p-3 rounded-xl flex items-center gap-2 text-xs font-medium border ${
+          className={`px-2.5 py-1.5 rounded text-xs flex items-center gap-1.5 border ${
             statusMessage.type === 'success'
-              ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700'
-              : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40'
+              ? 'border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20'
+              : 'border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 bg-red-50/50 dark:bg-red-950/20'
           }`}
         >
           {statusMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-zinc-800 dark:text-zinc-200 shrink-0" />
+            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+            <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
           )}
           <span>{statusMessage.text}</span>
         </div>
@@ -265,3 +211,5 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({ user, onUploadSucces
     </div>
   );
 };
+
+export default ResumeUpload;

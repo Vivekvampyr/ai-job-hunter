@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, MapPin, Briefcase, Award, Check, Plus, X, Save } from 'lucide-react';
+import { Check, X, Save } from 'lucide-react';
 import type { CandidateProfile } from '../types';
 
 interface ProfileEditorProps {
@@ -94,30 +94,29 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
   };
 
   return (
-    <div className="glass-panel p-6 rounded-2xl space-y-6">
-      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-[#373842] pb-4">
+    <div className="bg-white dark:bg-[#15171c] border border-zinc-200 dark:border-[#262933] rounded p-4 space-y-4">
+      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-[#262933] pb-3">
         <div>
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             Candidate Profile & Match Preferences
           </h2>
           <p className="text-xs text-zinc-500">
-            Customize extracted skills, target roles, and location preferences used for public ATS matching.
+            Configure skills, target roles, and locations used to match open positions.
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-md cursor-pointer disabled:opacity-50 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors disabled:opacity-50 ${
             savedSuccess
-              ? 'bg-emerald-600 text-white shadow-emerald-600/25'
-              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/25'
+              ? 'bg-emerald-600 text-white'
+              : 'bg-sky-600 hover:bg-sky-500 text-white'
           }`}
         >
           {savedSuccess ? (
             <>
-              <Check className="w-3.5 h-3.5 text-white" />
-              <span>Saved Successfully</span>
+              <Check className="w-3.5 h-3.5" />
+              <span>Saved</span>
             </>
           ) : (
             <>
@@ -128,35 +127,36 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Full Name & Experience Level */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">Candidate Name</label>
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+              Candidate Name
+            </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-200 dark:border-[#373842] rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
+              className="w-full px-2.5 py-1.5 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600 dark:focus:border-sky-500 transition-colors"
               placeholder="e.g. Vivek Rajawat"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-indigo-500" />
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
               Experience Level
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {EXPERIENCE_LEVELS.map((lvl) => (
                 <button
                   key={lvl}
                   type="button"
                   onClick={() => setExperienceLevel(lvl)}
-                  className={`py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                  className={`py-1.5 text-xs font-medium rounded border transition-colors ${
                     experienceLevel === lvl
-                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 shadow-md shadow-indigo-500/25'
-                      : 'bg-zinc-50 dark:bg-[#25262c] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                      : 'bg-white dark:bg-[#111317] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-[#262933] hover:border-zinc-300 dark:hover:border-zinc-700'
                   }`}
                 >
                   {lvl}
@@ -167,80 +167,82 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
         </div>
 
         {/* Work Preference (Remote, Hybrid, On-site) */}
-        <div>
-          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
-            <Briefcase className="w-3.5 h-3.5 text-indigo-500" />
-            Work Preference
-          </label>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {WORK_MODES.map((mode) => {
-              const active = workPreferences.includes(mode);
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => toggleWorkMode(mode)}
-                  className={`py-2 text-xs font-semibold rounded-lg border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    active
-                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 shadow-md shadow-indigo-500/25'
-                      : 'bg-zinc-50 dark:bg-[#25262c] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700'
-                  }`}
-                >
-                  {active && <Check className="w-3 h-3" />}
-                  {mode}
-                </button>
-              );
-            })}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+              Work Mode Preference
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {WORK_MODES.map((mode) => {
+                const active = workPreferences.includes(mode);
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => toggleWorkMode(mode)}
+                    className={`py-1.5 text-xs font-medium rounded border flex items-center justify-center gap-1 transition-colors ${
+                      active
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                        : 'bg-white dark:bg-[#111317] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-[#262933] hover:border-zinc-300 dark:hover:border-zinc-700'
+                    }`}
+                  >
+                    {active && <Check className="w-3 h-3" />}
+                    <span>{mode}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Preferred Locations */}
-          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-            Preferred Locations (Click to toggle)
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {ALL_LOCATIONS.map((loc) => {
-              const active = preferredLocations.includes(loc);
-              return (
-                <button
-                  key={loc}
-                  type="button"
-                  onClick={() => toggleLocation(loc)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                    active
-                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 shadow-sm'
-                      : 'bg-zinc-50 dark:bg-[#25262c] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700/80 hover:border-indigo-300 dark:hover:border-indigo-700'
-                  }`}
-                >
-                  {loc}
-                </button>
-              );
-            })}
+          <div>
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+              Preferred Locations
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {ALL_LOCATIONS.map((loc) => {
+                const active = preferredLocations.includes(loc);
+                return (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => toggleLocation(loc)}
+                    className={`px-2 py-1 text-xs rounded border transition-colors ${
+                      active
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-medium'
+                        : 'bg-white dark:bg-[#111317] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-[#262933] hover:border-zinc-300 dark:hover:border-zinc-700'
+                    }`}
+                  >
+                    {loc}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Target Job Roles */}
-      <div className="border-t border-zinc-200 dark:border-[#373842] pt-4">
-        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-2">
-          Target Job Roles (Used to generate search queries & role similarity)
+      <div className="border-t border-zinc-200 dark:border-[#262933] pt-3">
+        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
+          Target Job Roles
         </label>
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {targetRoles.length === 0 ? (
-            <p className="text-xs text-zinc-500 italic py-1">
-              No target roles defined yet. Upload your resume or type a role below.
+            <p className="text-xs text-zinc-400 italic">
+              No target roles configured yet.
             </p>
           ) : (
             targetRoles.map((role) => (
               <span
                 key={role}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-zinc-200 dark:border-[#262933] bg-zinc-50 dark:bg-[#0f1013] text-xs font-mono text-zinc-800 dark:text-zinc-200"
               >
-                {role}
+                <span>{role}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveRole(role)}
-                  className="hover:text-red-500 text-indigo-400 transition-colors cursor-pointer"
+                  className="hover:text-red-500 text-zinc-400 transition-colors ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -248,45 +250,44 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
             ))
           )}
         </div>
-        <form onSubmit={handleAddRole} className="flex gap-2 max-w-md">
+        <form onSubmit={handleAddRole} className="flex gap-1.5 max-w-sm">
           <input
             type="text"
             value={newRoleInput}
             onChange={(e) => setNewRoleInput(e.target.value)}
-            placeholder="Add role (e.g. AI Engineer, React Developer)"
-            className="flex-1 px-3 py-1.5 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-200 dark:border-[#373842] rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"
+            placeholder="Add role (e.g. AI Engineer)"
+            className="flex-1 px-2.5 py-1 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600"
           />
           <button
             type="submit"
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+            className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-200 dark:border-[#262933] bg-white dark:bg-[#15171c] hover:bg-zinc-100 dark:hover:bg-[#1c1f26] text-zinc-700 dark:text-zinc-300 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Add Role
+            Add
           </button>
         </form>
       </div>
 
       {/* Extracted Skills */}
-      <div className="border-t border-zinc-200 dark:border-[#373842] pt-4">
-        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-2">
-          Extracted Skills ({skills.length})
+      <div className="border-t border-zinc-200 dark:border-[#262933] pt-3">
+        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
+          Skills ({skills.length})
         </label>
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {skills.length === 0 ? (
-            <p className="text-xs text-zinc-500 italic py-1">
-              No skills extracted yet. Upload your resume or add your core skills below.
+            <p className="text-xs text-zinc-400 italic">
+              No skills configured yet.
             </p>
           ) : (
             skills.map((skill) => (
               <span
                 key={skill}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 font-medium"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-zinc-200 dark:border-[#262933] bg-zinc-50 dark:bg-[#0f1013] text-xs font-mono text-zinc-800 dark:text-zinc-200"
               >
-                {skill}
+                <span>{skill}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSkill(skill)}
-                  className="hover:text-red-500 text-emerald-500/70 transition-colors cursor-pointer"
+                  className="hover:text-red-500 text-zinc-400 transition-colors ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -294,23 +295,24 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onUpdateP
             ))
           )}
         </div>
-        <form onSubmit={handleAddSkill} className="flex gap-2 max-w-md">
+        <form onSubmit={handleAddSkill} className="flex gap-1.5 max-w-sm">
           <input
             type="text"
             value={newSkillInput}
             onChange={(e) => setNewSkillInput(e.target.value)}
-            placeholder="Add skill (e.g. Docker, Redis, Kubernetes)"
-            className="flex-1 px-3 py-1.5 text-xs bg-zinc-50 dark:bg-[#1a1b1f] border border-zinc-200 dark:border-[#373842] rounded-lg text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500"
+            placeholder="Add skill (e.g. Docker, PostgreSQL)"
+            className="flex-1 px-2.5 py-1 text-xs bg-zinc-50 dark:bg-[#0f1013] border border-zinc-200 dark:border-[#262933] rounded text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-sky-600"
           />
           <button
             type="submit"
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+            className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-200 dark:border-[#262933] bg-white dark:bg-[#15171c] hover:bg-zinc-100 dark:hover:bg-[#1c1f26] text-zinc-700 dark:text-zinc-300 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Add Skill
+            Add
           </button>
         </form>
       </div>
     </div>
   );
 };
+
+export default ProfileEditor;

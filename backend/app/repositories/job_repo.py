@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, desc
+from sqlalchemy import or_, and_, desc
 from app.models.company import Company
 from app.models.job import Job
 from app.models.contact import JobContact
@@ -75,25 +75,62 @@ class JobRepository:
         location: Optional[str] = None,
         work_mode: Optional[str] = None,
         company: Optional[str] = None,
+        job_ids: Optional[List[str]] = None,
         skip: int = 0,
         limit: int = 200
     ) -> Tuple[List[Job], int]:
         q = db.query(Job).options(joinedload(Job.company), joinedload(Job.contacts))
 
-        if query:
-            search_filter = or_(
-                Job.title.ilike(f"%{query}%"),
-                Job.description.ilike(f"%{query}%")
-            )
-            q = q.filter(search_filter)
+        # Direct exact match for specific job IDs (e.g. from current UI view)
+        if job_ids:
+            q = q.filter(Job.id.in_(job_ids))
+            raw_jobs = q.all()
+            job_map = {j.id: j for j in raw_jobs}
+            ordered = [job_map[jid] for jid in job_ids if jid in job_map]
+            return ordered, len(ordered)
+
+        if query and query.strip():
+            clean_query = query.strip()
+            terms = [t.strip() for t in clean_query.split() if t.strip()]
+            extracted_work_modes = []
+            role_terms = []
+            for t in terms:
+                if t.lower() in ["remote", "hybrid", "onsite", "on-site"]:
+                    extracted_work_modes.append(t.lower())
+                else:
+                    role_terms.append(t)
+
+            if role_terms:
+                term_filters = []
+                for term in role_terms:
+                    term_filters.append(
+                        or_(
+                            Job.title.ilike(f"%{term}%"),
+                            Job.description.ilike(f"%{term}%"),
+                            Company.name.ilike(f"%{term}%")
+                        )
+                    )
+                q = q.join(Job.company).filter(and_(*term_filters))
+            else:
+                q = q.join(Job.company).filter(
+                    or_(
+                        Job.title.ilike(f"%{clean_query}%"),
+                        Job.description.ilike(f"%{clean_query}%"),
+                        Company.name.ilike(f"%{clean_query}%")
+                    )
+                )
+
+            if extracted_work_modes and (not work_mode or work_mode.lower() == "all"):
+                work_mode_filter = or_(*[Job.work_mode.ilike(f"%{wm}%") for wm in extracted_work_modes])
+                q = q.filter(work_mode_filter)
 
         if location:
             q = q.filter(Job.location.ilike(f"%{location}%"))
 
         if work_mode and work_mode.lower() != "all":
-            q = q.filter(Job.work_mode.ilike(work_mode))
+            q = q.filter(Job.work_mode.ilike(f"%{work_mode}%"))
 
-        if company:
+        if company and not (query and query.strip()):
             q = q.join(Job.company).filter(Company.name.ilike(f"%{company}%"))
 
         total = q.count()

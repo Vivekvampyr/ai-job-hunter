@@ -65,7 +65,7 @@ export const App: React.FC = () => {
       if (queryList.length > 0) {
         setActiveQuery(queryList[0]);
       } else {
-        setActiveQuery('Software Engineer Remote');
+        setActiveQuery('');
       }
       setApplications(appsData);
 
@@ -124,14 +124,31 @@ export const App: React.FC = () => {
   };
 
   // Excel Export
-  const handleExportExcel = () => {
-    const url = api.getExcelExportUrl({
-      query: activeQuery,
-      location: selectedLocation,
-      work_mode: selectedWorkMode,
-      match_level: selectedMatchLevel,
-    });
-    window.open(url, '_blank');
+  const handleExportExcel = async (jobIds?: string[]) => {
+    try {
+      await api.downloadExcel({
+        job_ids: jobIds && jobIds.length > 0 ? jobIds : undefined,
+        query: activeQuery || undefined,
+        location: selectedLocation,
+        work_mode: selectedWorkMode,
+        match_level: selectedMatchLevel,
+      });
+    } catch (err) {
+      console.error('Failed to export Excel file via blob, falling back to direct URL:', err);
+      const url = api.getExcelExportUrl({
+        query: activeQuery || undefined,
+        location: selectedLocation,
+        work_mode: selectedWorkMode,
+        match_level: selectedMatchLevel,
+      });
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'AI_Job_Hunter_Matches.xlsx');
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
   };
 
   // Open Apply Modal
@@ -195,7 +212,7 @@ export const App: React.FC = () => {
   const mediumMatchCount = jobs.filter((j) => j.match?.match_level === 'Medium').length;
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7] dark:bg-[#1a1b1f] text-zinc-900 dark:text-zinc-100 flex flex-col selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900 transition-colors duration-200">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0f1013] text-[#111827] dark:text-[#f3f4f6] flex flex-col selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900 transition-colors">
       {/* Top Navigation */}
       <Navbar
         user={user}
@@ -211,52 +228,38 @@ export const App: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
-        {/* Hero Banner with Quick Stats & Semantic Colors */}
-        <section className="bg-white dark:bg-[#222329] border border-zinc-200 dark:border-[#373842] rounded-2xl p-6 sm:p-7 shadow-sm transition-colors duration-200 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-emerald-500 to-amber-500 opacity-80" />
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] font-mono font-medium text-emerald-700 dark:text-emerald-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>ATS Discovery Engine</span>
-                <span className="text-emerald-400 dark:text-emerald-600">&bull;</span>
-                <span className="text-emerald-600 dark:text-emerald-400">Zero Scraping</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-                Automated Job Discovery & Direct Outreach
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Aggregates real-time open positions from public Greenhouse, Lever, Ashby, and SmartRecruiters APIs.
-                Extracts resume skills and generates tailored direct outreach drafts.
-              </p>
-            </div>
-
-            {/* Quick Metrics with Semantic Colors */}
-            <div className="grid grid-cols-3 gap-3 shrink-0">
-              <div className="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/40 p-3.5 rounded-xl text-center min-w-[95px] shadow-sm">
-                <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 block">{jobs.length}</span>
-                <span className="text-[10px] text-indigo-700/80 dark:text-indigo-300/80 uppercase tracking-wider font-semibold">Jobs Found</span>
-              </div>
-              <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/40 p-3.5 rounded-xl text-center min-w-[95px] shadow-sm">
-                <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 block">{highMatchCount}</span>
-                <span className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 uppercase tracking-wider font-semibold">High Match</span>
-              </div>
-              <div className="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 p-3.5 rounded-xl text-center min-w-[95px] shadow-sm">
-                <span className="text-2xl font-bold text-amber-600 dark:text-amber-400 block">{mediumMatchCount}</span>
-                <span className="text-[10px] text-amber-700/80 dark:text-amber-300/80 uppercase tracking-wider font-semibold">Med Match</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Tab 1: Job Discovery (Default MVP Flow) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-3.5">
+        {/* Tab 1: Job Discovery */}
         {activeTab === 'jobs' && (
-          <div className="space-y-8">
-            {/* Step 1 & 2: Resume Upload Dropzone & Active Status Card */}
+          <div className="space-y-3">
+            {/* Header & Stats Strip */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-zinc-200 dark:border-[#262933]">
+              <div>
+                <h1 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                  Job Discovery
+                </h1>
+                <p className="text-xs text-zinc-500">
+                  Aggregating open roles from Ashby, Greenhouse, Lever, SmartRecruiters, and Workday.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-mono text-zinc-500">
+                <span>{jobs.length} total</span>
+                <span>·</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  {highMatchCount} high match
+                </span>
+                <span>·</span>
+                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                  {mediumMatchCount} medium
+                </span>
+              </div>
+            </div>
+
+            {/* Resume Upload Status Bar */}
             <ResumeUpload user={user} onUploadSuccess={handleUploadSuccess} />
 
-            {/* Step 3: Auto-Generated Search Queries & Custom Bar */}
+            {/* Target Query Filter Strip */}
             <SearchQueryBar
               queries={queries}
               activeQuery={activeQuery}
@@ -265,7 +268,7 @@ export const App: React.FC = () => {
               isSearching={isSearching}
             />
 
-            {/* Step 6, 7, 8: Discovered Jobs Table */}
+            {/* Positions Table */}
             <JobTable
               jobs={jobs}
               onApply={handleApplyClick}
@@ -282,14 +285,14 @@ export const App: React.FC = () => {
 
         {/* Tab 2: Candidate Profile Editor */}
         {activeTab === 'profile' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <ProfileEditor key={profile?.id || user?.id || 'profile'} profile={profile} onUpdateProfile={handleUpdateProfile} />
           </div>
         )}
 
         {/* Tab 3: Applications & Outreach History */}
         {activeTab === 'applications' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <ApplicationsHistory
               applications={applications}
               onOpenDiscovery={() => setActiveTab('jobs')}
@@ -316,11 +319,11 @@ export const App: React.FC = () => {
         onAuthSuccess={handleAuthSuccess}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-[#373842] py-6 text-center text-xs text-zinc-500 dark:text-zinc-400 bg-white/50 dark:bg-[#1f2025]/50 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>AI Job Hunter &bull; Public ATS Discovery Engine &bull; Zero Scraping</span>
-          <span className="text-zinc-400 dark:text-zinc-500">FastAPI &bull; PostgreSQL &bull; React &bull; Tailwind</span>
+      {/* Minimal Tool Footer */}
+      <footer className="border-t border-zinc-200 dark:border-[#262933] py-3 text-center text-xs text-zinc-500 bg-white dark:bg-[#15171c] transition-colors">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px]">
+          <span>Job Hunter · Public ATS Discovery</span>
+          <span className="font-mono text-zinc-400 dark:text-zinc-500">Ashby · Greenhouse · Lever · SmartRecruiters · Workday</span>
         </div>
       </footer>
     </div>
